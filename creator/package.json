@@ -1,0 +1,43 @@
+{
+  "name": "@oside/creator",
+  "version": "0.0.1",
+  "description": "CLI for scaffolding projects from local templates",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "oside": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc && chmod +x dist/index.js",
+    "start": "node dist/index.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^13.0.0",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.0",
+    "ts-jest": "^29.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}
