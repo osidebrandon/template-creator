@@ -10,7 +10,7 @@ A small CLI (`oside`) that scaffolds new projects from the local templates in th
 ## Install (Local)
 
 ```bash
-# In this directory
+cd ./creator
 yarn install
 yarn build
 npm link        # registers the `oside` bin globally
@@ -31,6 +31,7 @@ oside list
 
 ```bash
 oside create my-app                     # uses the default (console) template
+oside create my-bun-app -t bun-console
 oside create my-api -t express
 oside create my-realtime-app -t sockets
 oside create my-lib -t package -d ~/dev
@@ -45,6 +46,7 @@ After creating, follow the printed next steps (typically `cd <name> && yarn inst
 | Alias          | Source directory                |
 | -------------- | ------------------------------- |
 | `console`      | `template-node-console`         |
+| `bun-console`  | `template-bun-console`          |
 | `package`      | `template-node-package`         |
 | `express`      | `template-node-express`         |
 | `sockets`      | `template-node-express-sockets` |
@@ -81,6 +83,8 @@ The CLI locates templates relative to its own install location (`creator/` must 
    ```
 
    No need to re-link — `npm link` uses a symlink so the new build is picked up automatically.
+
+The `bun-console` template uses Bun for installation, running, and tests; run `bun install` in the generated project.
 
 ## Scripts
 

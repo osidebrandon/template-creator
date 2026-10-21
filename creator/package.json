@@ -12,9 +12,9 @@
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && chmod +x dist/index.js",
+    "build": "rimraf dist && tsc",
     "start": "node dist/index.js",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test": "cross-env NODE_OPTIONS='--experimental-vm-modules' jest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
@@ -38,6 +38,8 @@
     "ts-jest": "^29.3.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0",
-    "typescript-eslint": "^8.0.0"
+    "typescript-eslint": "^8.0.0",
+    "cross-env": "^10.1.0",
+    "rimraf": "^6.1.3"
   }
 }

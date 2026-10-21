@@ -4,6 +4,7 @@
  */
 export const TEMPLATE_MAP: Record<string, string> = {
   console: 'template-node-console',
+  'bun-console': 'template-bun-console',
   package: 'template-node-package',
   express: 'template-node-express',
   sockets: 'template-node-express-sockets',

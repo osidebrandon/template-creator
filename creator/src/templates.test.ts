@@ -3,7 +3,7 @@ import { TEMPLATE_MAP, DEFAULT_TEMPLATE } from './templates.js';
 describe('TEMPLATE_MAP', () => {
   it('has the expected aliases', () => {
     expect(Object.keys(TEMPLATE_MAP).sort()).toEqual(
-      ['console', 'express', 'package', 'pixi-react', 'pixi-vanilla', 'sockets'].sort()
+      ['bun-console', 'console', 'express', 'package', 'pixi-react', 'pixi-vanilla', 'sockets'].sort()
     );
   });
 

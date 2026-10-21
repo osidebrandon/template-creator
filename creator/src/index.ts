@@ -68,7 +68,7 @@ program
     await renamePackage(dest, projectName);
     console.log(`Done. Next steps:`);
     console.log(`  cd ${path.relative(process.cwd(), dest) || projectName}`);
-    console.log(`  yarn install`);
+    console.log(`  ${opts.template === 'bun-console' ? 'bun install' : 'yarn install'}`);
   });
 
 program
