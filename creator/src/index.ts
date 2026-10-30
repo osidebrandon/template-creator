@@ -11,7 +11,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_ROOT = path.resolve(__dirname, '..', '..');
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', '.yarn']);
-const SKIP_FILES = new Set(['yarn.lock', 'yarn-error.log', '.env']);
+const SKIP_FILES = new Set(['yarn.lock', 'yarn-error.log', 'bun.lock', 'bun.lockb', '.env']);
+const BUN_TEMPLATES = new Set(['bun-console', 'bun-mono']);
 
 const copyTemplate = async (src: string, dest: string): Promise<void> => {
   await fs.copy(src, dest, {
@@ -68,7 +69,7 @@ program
     await renamePackage(dest, projectName);
     console.log(`Done. Next steps:`);
     console.log(`  cd ${path.relative(process.cwd(), dest) || projectName}`);
-    console.log(`  ${opts.template === 'bun-console' ? 'bun install' : 'yarn install'}`);
+    console.log(`  ${BUN_TEMPLATES.has(opts.template) ? 'bun install' : 'yarn install'}`);
   });
 
 program

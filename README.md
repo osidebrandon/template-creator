@@ -6,6 +6,7 @@ A small CLI (`oside`) that scaffolds new projects from the local templates in th
 
 - Node.js >= 25
 - Yarn 1.x (for the templates) — `npm` for installing the CLI globally
+- Bun (for the Bun templates)
 
 ## Install (Local)
 
@@ -32,6 +33,7 @@ oside list
 ```bash
 oside create my-app                     # uses the default (console) template
 oside create my-bun-app -t bun-console
+oside create my-workspace -t bun-mono
 oside create my-api -t express
 oside create my-realtime-app -t sockets
 oside create my-lib -t package -d ~/dev
@@ -39,7 +41,7 @@ oside create my-pixi-app -t pixi-react
 oside list                              # show available template aliases
 ```
 
-After creating, follow the printed next steps (typically `cd <name> && yarn install`).
+After creating, follow the printed next steps to install dependencies with Yarn or Bun, depending on the template.
 
 ## Template Aliases
 
@@ -47,6 +49,7 @@ After creating, follow the printed next steps (typically `cd <name> && yarn inst
 | -------------- | ------------------------------- |
 | `console`      | `template-node-console`         |
 | `bun-console`  | `template-bun-console`          |
+| `bun-mono`     | `template-bun-mono`             |
 | `package`      | `template-node-package`         |
 | `express`      | `template-node-express`         |
 | `sockets`      | `template-node-express-sockets` |
@@ -58,7 +61,7 @@ The mapping lives in [src/templates.ts](src/templates.ts).
 ## How It Works
 
 1. Resolves the template directory from the alias map.
-2. Recursively copies the template into the destination, skipping `node_modules`, `dist`, `coverage`, `.yarn`, `yarn.lock`, `yarn-error.log`, and `.env`.
+2. Recursively copies the template into the destination, skipping `node_modules`, `dist`, `coverage`, `.yarn`, `yarn.lock`, `bun.lock`, `bun.lockb`, `yarn-error.log`, and `.env`.
 3. Updates `package.json` in the new project — sets `name` to `<projectName>` and resets `version` to `0.0.1`.
 
 The CLI locates templates relative to its own install location (`creator/` must live next to the `template-*/` directories).
@@ -84,7 +87,7 @@ The CLI locates templates relative to its own install location (`creator/` must 
 
    No need to re-link — `npm link` uses a symlink so the new build is picked up automatically.
 
-The `bun-console` template uses Bun for installation, running, and tests; run `bun install` in the generated project.
+The `bun-console` and `bun-mono` templates use Bun for installation, running, and tests; run `bun install` in the generated project.
 
 ## Scripts
 
