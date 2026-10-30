@@ -1,12 +1,12 @@
 # @oside/creator
 
-A small CLI (`oside`) that scaffolds new projects from the local templates in this workspace.
+A small CLI (`oside`) that scaffolds projects from the local templates in this workspace.
 
 ## Requirements
 
 - Node.js >= 25
-- Yarn 1.x (for the templates) — `npm` for installing the CLI globally
-- Bun (for the Bun templates)
+- Yarn 1.x for legacy templates
+- Bun for Bun templates
 
 ## Install (Local)
 
@@ -14,7 +14,7 @@ A small CLI (`oside`) that scaffolds new projects from the local templates in th
 cd ./creator
 yarn install
 yarn build
-npm link        # registers the `oside` bin globally
+npm link
 ```
 
 > Use `npm link` rather than `yarn link` — Yarn 1.x does not register `bin` entries globally.
@@ -24,85 +24,95 @@ To uninstall later: `npm unlink -g @oside/creator`.
 ## Usage
 
 ```bash
-oside create <projectName> [--template <alias>] [--dir <path>]
+oside create <projectName> --template <alias>
+oside create <workspaceName> --template bun-mono --projects <template[=folder]...>
 oside list
 ```
+
+`--template` is required for every `create`. Projects are created relative to the current working directory.
 
 ### Examples
 
 ```bash
-oside create my-app                     # uses the default (console) template
-oside create my-bun-app -t bun-console
-oside create my-workspace -t bun-mono
-oside create my-api -t express
-oside create my-realtime-app -t sockets
-oside create my-lib -t package -d ~/dev
-oside create my-pixi-app -t pixi-react
-oside list                              # show available template aliases
+oside create my-app --template bun-console
+oside create my-api -t bun-hono
+oside create my-library -t bun-package
+oside create my-workspace -t bun-mono --projects bun-vite-react bun-logger
+oside create my-workspace -t bun-mono --projects bun-hono=api bun-package=shared
+oside create my-node-api -t express
+oside list
 ```
 
-After creating, follow the printed next steps to install dependencies with Yarn or Bun, depending on the template.
+`--projects` is only available when creating a new `bun-mono` workspace. Each item is a Bun app or package alias, optionally followed by `=folder`. The folder override also becomes the component's `package.json` name.
 
-## Template Aliases
+## Workspace routing
 
-| Alias          | Source directory                |
-| -------------- | ------------------------------- |
-| `console`      | `template-node-console`         |
-| `bun-console`  | `template-bun-console`          |
-| `bun-mono`     | `template-bun-mono`             |
-| `package`      | `template-node-package`         |
-| `express`      | `template-node-express`         |
-| `sockets`      | `template-node-express-sockets` |
-| `pixi-react`   | `template-react-pixi`           |
-| `pixi-vanilla` | `template-vanilla-pixi`         |
+Outside a Bun workspace, every template creates a standalone project at `CWD/<projectName>`. The `bun-mono` template creates a workspace root; when `--projects` is provided, Bun app templates are placed in `apps/<name>` and Bun package templates in `packages/<name>`.
 
-The mapping lives in [src/templates.ts](src/templates.ts).
+For later additions, the CLI recognizes a workspace by finding an ancestor `package.json` that declares both `apps/*` and `packages/*` in `workspaces`. From that workspace root, Bun apps and packages are routed by template kind. From the exact `apps/` or `packages/` directory, creation goes directly under the current directory and the template kind must match. Deeper workspace child directories are rejected.
 
-## How It Works
+Only Bun app and package templates can be added to a Bun workspace. Legacy templates are standalone-only in this workspace flow, and `bun-mono` creates roots only. New Bun components have local TypeScript configuration and do not depend on the workspace root's `tsconfig.base.json`.
 
-1. Resolves the template directory from the alias map.
-2. Recursively copies the template into the destination, skipping `node_modules`, `dist`, `coverage`, `.yarn`, `yarn.lock`, `bun.lock`, `bun.lockb`, `yarn-error.log`, and `.env`.
-3. Updates `package.json` in the new project — sets `name` to `<projectName>` and resets `version` to `0.0.1`.
+Project names and folder overrides must be safe single path segments.
 
-The CLI locates templates relative to its own install location (`creator/` must live next to the `template-*/` directories).
+## Templates
 
-## Adding a New Template
+`oside list` groups these by Bun kind and lists non-Bun aliases under **Legacy**.
 
-1. Create a new directory in the workspace root, e.g. `template-node-foo/`.
-2. Add an entry to [src/templates.ts](src/templates.ts):
+| Kind | Alias | Source directory |
+| --- | --- | --- |
+| Bun app | `bun-console` | `template-bun-console` |
+| Bun app | `bun-hono` | `template-bun-hono` |
+| Bun app | `bun-express` | `template-bun-express` |
+| Bun app | `bun-vite-vanilla` | `template-bun-vite-vanilla` |
+| Bun app | `bun-vite-react` | `template-bun-vite-react` |
+| Bun package | `bun-logger` | `template-bun-logger` |
+| Bun package | `bun-package` | `template-bun-package` |
+| Bun workspace | `bun-mono` | `template-bun-mono` |
+| Legacy | `console` | `template-node-console` |
+| Legacy | `package` | `template-node-package` |
+| Legacy | `express` | `template-node-express` |
+| Legacy | `sockets` | `template-node-express-sockets` |
+| Legacy | `pixi-react` | `template-react-pixi` |
+| Legacy | `pixi-vanilla` | `template-vanilla-pixi` |
 
-   ```ts
-   export const TEMPLATE_MAP: Record<string, string> = {
-     // ...existing entries
-     foo: "template-node-foo",
-   };
-   ```
+The Bun package templates are minimal reusable TypeScript libraries. `bun-package` has no runtime dependencies; `bun-logger` preserves the logger sample formerly included in the workspace shell.
 
-3. Update the test in [src/templates.test.ts](src/templates.test.ts) to include the new alias.
-4. Rebuild:
+## Installation
+
+The CLI never installs dependencies automatically. For a standalone Bun project, run `bun install` in the generated project. For a workspace create or component addition, run `bun install` at the workspace root. Standalone legacy templates use `yarn install`.
+
+The CLI copies templates while skipping `node_modules`, `dist`, `coverage`, `.yarn`, lockfiles, `yarn-error.log`, and `.env`. It updates a copied `package.json` name to the destination folder name and resets its version to `0.0.1`.
+
+Templates are resolved relative to the CLI installation (`creator/` must live next to the `template-*/` directories).
+
+## Adding a Template
+
+1. Add a directory at the workspace root, such as `template-bun-foo/`.
+2. Register the alias in [creator/src/templates.ts](creator/src/templates.ts). Bun templates also declare a `kind` of `app`, `package`, or `workspace`; legacy templates omit kind metadata.
+3. Add focused tests in `creator/src/`.
+4. Build and test the CLI:
 
    ```bash
+   cd creator
    yarn build
+   yarn test --runInBand
    ```
 
-   No need to re-link — `npm link` uses a symlink so the new build is picked up automatically.
+## CLI Scripts
 
-The `bun-console` and `bun-mono` templates use Bun for installation, running, and tests; run `bun install` in the generated project.
-
-## Scripts
-
-| Script           | Description                               |
-| ---------------- | ----------------------------------------- |
-| `yarn dev`       | Run the CLI with watch mode via `tsx`     |
-| `yarn build`     | Compile TypeScript and `chmod +x` the bin |
-| `yarn start`     | Run the compiled CLI                      |
-| `yarn test`      | Run Jest tests                            |
-| `yarn typecheck` | Type-check without emitting               |
-| `yarn lint`      | Lint `src/` with ESLint                   |
-| `yarn lint:fix`  | Auto-fix lint and formatting issues       |
+| Script | Description |
+| --- | --- |
+| `yarn dev` | Run the CLI in watch mode via `tsx` |
+| `yarn build` | Compile TypeScript |
+| `yarn start` | Run the compiled CLI |
+| `yarn test` | Run Jest tests |
+| `yarn typecheck` | Type-check without emitting |
+| `yarn lint` | Lint `src/` with ESLint |
+| `yarn lint:fix` | Auto-fix lint issues |
 
 ## Stack
 
-- **commander** — argument & flag parsing
-- **fs-extra** — recursive directory copy with promises
-- **TypeScript / ESLint / Prettier / Jest** — same tooling as the templates
+- **commander** — command-line parsing
+- **fs-extra** — recursive template copying
+- **TypeScript / ESLint / Prettier / Jest** — CLI implementation and tests

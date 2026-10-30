@@ -1,11 +1,24 @@
-import { TEMPLATE_MAP, DEFAULT_TEMPLATE } from './templates.js';
+import fs from 'fs-extra';
+import path from 'path';
+import { TEMPLATES_ROOT } from './create.js';
+import {
+  formatTemplateList,
+  getBunTemplateAliases,
+  TEMPLATE_MAP,
+} from './templates.js';
 
 describe('TEMPLATE_MAP', () => {
-  it('has the expected aliases', () => {
+  it('keeps the existing aliases and registers the Bun templates', () => {
     expect(Object.keys(TEMPLATE_MAP).sort()).toEqual(
       [
         'bun-console',
+        'bun-express',
+        'bun-hono',
+        'bun-logger',
         'bun-mono',
+        'bun-package',
+        'bun-vite-react',
+        'bun-vite-vanilla',
         'console',
         'express',
         'package',
@@ -16,13 +29,52 @@ describe('TEMPLATE_MAP', () => {
     );
   });
 
-  it('default template is registered', () => {
-    expect(TEMPLATE_MAP[DEFAULT_TEMPLATE]).toBeDefined();
+  it('adds kind metadata only to Bun templates', () => {
+    expect(getBunTemplateAliases('app')).toEqual([
+      'bun-console',
+      'bun-hono',
+      'bun-express',
+      'bun-vite-vanilla',
+      'bun-vite-react',
+    ]);
+    expect(getBunTemplateAliases('package')).toEqual(['bun-logger', 'bun-package']);
+    expect(getBunTemplateAliases('workspace')).toEqual(['bun-mono']);
+
+    for (const [alias, template] of Object.entries(TEMPLATE_MAP)) {
+      if (alias.startsWith('bun-')) {
+        expect(template.kind).toBeDefined();
+      } else {
+        expect(template.kind).toBeUndefined();
+      }
+      expect(template.directory).toMatch(/^template-/);
+    }
   });
 
-  it('all values point to template- directories', () => {
-    for (const dir of Object.values(TEMPLATE_MAP)) {
-      expect(dir).toMatch(/^template-/);
+  it('points to local template directories with self-contained Bun component configs', async () => {
+    for (const template of Object.values(TEMPLATE_MAP)) {
+      expect(await fs.pathExists(path.join(TEMPLATES_ROOT, template.directory))).toBe(true);
+
+      if (template.kind === 'app' || template.kind === 'package') {
+        const tsconfig = await fs.readJson(
+          path.join(TEMPLATES_ROOT, template.directory, 'tsconfig.json')
+        );
+        expect(tsconfig.extends).toBeUndefined();
+      }
     }
+  });
+
+  it('lists Bun templates by kind and legacy templates without fixed paths', () => {
+    const output = formatTemplateList();
+
+    expect(output).toContain('Bun apps:');
+    expect(output).toContain('Bun packages:');
+    expect(output).toContain('Bun workspace:');
+    expect(output).toContain('Legacy:');
+    expect(output).toContain('  bun-hono');
+    expect(output).toContain('  bun-package');
+    expect(output).toContain('  express');
+    expect(output).not.toContain('template-bun-hono');
+    expect(output).not.toContain('apps/');
+    expect(output).not.toContain('packages/');
   });
 });

@@ -7,12 +7,6 @@
     "apps/*",
     "packages/*"
   ],
-  "scripts": {
-    "test": "bun run --workspaces test",
-    "typecheck": "bun run --workspaces typecheck",
-    "lint": "bun run --workspaces lint",
-    "format": "bun run --workspaces format"
-  },
   "devDependencies": {
     "@biomejs/biome": "^2.6.4",
     "@types/bun": "^1.2.0",

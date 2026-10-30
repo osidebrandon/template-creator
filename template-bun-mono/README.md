@@ -1,47 +1,37 @@
 # template-bun-mono
 
-A Bun + TypeScript monorepo starter using Bun workspaces.
+A child-free Bun workspace shell. Add applications under `apps/` and reusable packages under `packages/`.
 
 ## Structure
 
 ```text
 apps/
-  bun-console/
-    src/
+  <app>/
 packages/
-  logger/
-    src/
+  <package>/
 ```
-
-The `@local/logger` workspace package exports `log(namespace, message)`. The example app uses it to print `[EXAMPLE] Hello world!`.
 
 ## Getting Started
 
-```bash
-bun install
-bun run test
-bun run typecheck
-bun run lint
-bun run format
-bun run --filter bun-console start
-```
-
-Each workspace also has its own scripts. Run them from that workspace directory:
+Create a workspace with components in one step:
 
 ```bash
-cd apps/bun-console
-bun run start
-bun run test
-bun run typecheck
-bun run lint
-bun run format
+oside create my-mono --template bun-mono --projects bun-vite-react bun-logger
 ```
 
-The logger package has `test`, `typecheck`, `lint`, and `format` scripts.
+The CLI places app templates in `apps/` and package templates in `packages/`. A `template=folder` entry overrides the folder and package name:
+
+```bash
+oside create my-mono --template bun-mono --projects bun-hono=api bun-package=shared
+```
+
+The workspace shell can also be created without components. Later, run `oside create <name> --template <bun-app-or-package>` from its root to route by template kind, or run it from the exact `apps/` or `packages/` directory to create directly there. App templates belong in `apps/`; package templates belong in `packages/`.
+
+Run `bun install` manually at the workspace root after adding projects. The CLI does not install dependencies or modify root scripts/configuration when adding a component.
 
 ## Tooling
 
-- **Bun** — runtime, package manager, workspace manager, and test runner
-- **TypeScript** — shared strict compiler defaults with per-workspace `tsconfig.json` files
-- **Biome** — shared linting and formatting rules, with workspace configs ready for future overrides
+- **Bun** — package manager and workspace manager
+- **TypeScript** — root defaults are available in `tsconfig.base.json`; generated components use their own local `tsconfig.json`
+- **Biome** — root linting and formatting configuration, ready for workspace overrides
 - **VS Code** — recommended Biome extension and format-on-save settings
