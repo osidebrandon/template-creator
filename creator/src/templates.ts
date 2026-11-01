@@ -16,6 +16,7 @@ export const TEMPLATE_MAP: Record<string, TemplateDefinition> = {
   'bun-logger': { directory: 'template-bun-logger', kind: 'package' },
   'bun-package': { directory: 'template-bun-package', kind: 'package' },
   'bun-event-bus': { directory: 'template-bun-event-bus', kind: 'package' },
+  'bun-lifecycles': { directory: 'template-bun-lifecycles', kind: 'package' },
   'bun-mono': { directory: 'template-bun-mono', kind: 'workspace' },
   package: { directory: 'template-node-package' },
   express: { directory: 'template-node-express' },

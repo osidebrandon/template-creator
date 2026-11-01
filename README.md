@@ -72,6 +72,7 @@ Project names and folder overrides must be safe single path segments.
 | Bun package | `bun-logger` | `template-bun-logger` |
 | Bun package | `bun-package` | `template-bun-package` |
 | Bun package | `bun-event-bus` | `template-bun-event-bus` |
+| Bun package | `bun-lifecycles` | `template-bun-lifecycles` |
 | Bun workspace | `bun-mono` | `template-bun-mono` |
 | Legacy | `console` | `template-node-console` |
 | Legacy | `package` | `template-node-package` |
@@ -80,7 +81,7 @@ Project names and folder overrides must be safe single path segments.
 | Legacy | `pixi-react` | `template-react-pixi` |
 | Legacy | `pixi-vanilla` | `template-vanilla-pixi` |
 
-The Bun package templates are minimal reusable TypeScript libraries. `bun-package` has no runtime dependencies; `bun-logger` preserves the logger sample formerly included in the workspace shell. The `ac-state` and `event-bus` packages are available through the `bun-ac-state` and `bun-event-bus` templates. They remain separate packages; `ac-state` declares `event-bus` as a workspace dependency, but the consumer must create and wire the `event-bus` package separately. Standalone `ac-state` output requires the consumer to resolve or replace its `workspace:*` dependency.
+The Bun package templates are minimal reusable TypeScript libraries. `bun-package` has no runtime dependencies; `bun-logger` preserves the logger sample formerly included in the workspace shell. `lifecycles` provides process lifecycle hooks with no runtime dependencies. The `ac-state` and `event-bus` packages are available through the `bun-ac-state` and `bun-event-bus` templates. They remain separate packages; `ac-state` declares `event-bus` as a workspace dependency, but the consumer must create and wire the `event-bus` package separately. Standalone `ac-state` output requires the consumer to resolve or replace its `workspace:*` dependency.
 
 ## Installation
 

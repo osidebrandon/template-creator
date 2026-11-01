@@ -245,6 +245,7 @@ describe('project creation', () => {
         'console',
         'bun-logger',
         'bun-event-bus',
+        'bun-lifecycles',
         'bun-mono',
         'bun-package=../escape',
       ]),
@@ -256,11 +257,12 @@ describe('project creation', () => {
       path.join(root, 'apps', 'api'),
       path.join(root, 'packages', 'logger'),
       path.join(root, 'packages', 'event-bus'),
+      path.join(root, 'packages', 'lifecycles'),
     ]);
     expect(result.failures).toHaveLength(3);
     expect(result.validProjectChoices).toContain('apps: bun-console, bun-hono');
     expect(result.validProjectChoices).toContain(
-      'packages: bun-ac-state, bun-logger, bun-package, bun-event-bus'
+      'packages: bun-ac-state, bun-logger, bun-package, bun-event-bus, bun-lifecycles'
     );
     expect(result.installRoot).toBe(root);
     expect(result.installCommand).toBe('bun install');
@@ -278,6 +280,9 @@ describe('project creation', () => {
     await expect(
       fs.readJson(path.join(root, 'packages', 'event-bus', 'package.json'))
     ).resolves.toMatchObject({ name: 'event-bus' });
+    await expect(
+      fs.readJson(path.join(root, 'packages', 'lifecycles', 'package.json'))
+    ).resolves.toMatchObject({ name: 'lifecycles' });
   });
 
   it('continues a workspace batch after a destination collision', async () => {

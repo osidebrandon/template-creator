@@ -20,6 +20,7 @@ describe('TEMPLATE_MAP', () => {
         'bun-vite-react',
         'bun-vite-vanilla',
         'bun-ac-state',
+        'bun-lifecycles',
         'console',
         'bun-event-bus',
         'express',
@@ -44,6 +45,7 @@ describe('TEMPLATE_MAP', () => {
       'bun-logger',
       'bun-package',
       'bun-event-bus',
+      'bun-lifecycles',
     ]);
     expect(getBunTemplateAliases('workspace')).toEqual(['bun-mono']);
 
@@ -82,6 +84,7 @@ describe('TEMPLATE_MAP', () => {
     expect(output).toContain('  bun-package');
     expect(output).toContain('  bun-ac-state');
     expect(output).toContain('  bun-event-bus');
+    expect(output).toContain('  bun-lifecycles');
     expect(output).toContain('  express');
     expect(output).not.toContain('template-bun-hono');
     expect(output).not.toContain('apps/');
