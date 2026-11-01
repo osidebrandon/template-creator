@@ -1,5 +1,5 @@
 {
-  "name": "template-bun-logger",
+  "name": "logger",
   "version": "0.0.1",
   "description": "Small reusable Bun and TypeScript logger library",
   "type": "module",

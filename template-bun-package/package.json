@@ -1,5 +1,5 @@
 {
-  "name": "template-bun-package",
+  "name": "package",
   "version": "0.0.1",
   "description": "Minimal reusable Bun and TypeScript library",
   "type": "module",

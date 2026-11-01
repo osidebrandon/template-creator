@@ -24,12 +24,12 @@ To uninstall later: `npm unlink -g @oside/creator`.
 ## Usage
 
 ```bash
-oside create <projectName> --template <alias>
+oside create [projectName] --template <alias>
 oside create <workspaceName> --template bun-mono --projects <template[=folder]...>
 oside list
 ```
 
-`--template` is required for every `create`. Projects are created relative to the current working directory.
+`--template` is required for every `create`. Package templates default to the name in their `package.json`; pass `projectName` to choose another folder and package name. App, workspace, and legacy templates still require `projectName`. Projects are created relative to the current working directory.
 
 ### Examples
 
@@ -37,13 +37,15 @@ oside list
 oside create my-app --template bun-console
 oside create my-api -t bun-hono
 oside create my-library -t bun-package
+oside create --template bun-event-bus
+oside create my-event-bus --template bun-event-bus
 oside create my-workspace -t bun-mono --projects bun-vite-react bun-logger
 oside create my-workspace -t bun-mono --projects bun-hono=api bun-package=shared
 oside create my-node-api -t express
 oside list
 ```
 
-`--projects` is only available when creating a new `bun-mono` workspace. Each item is a Bun app or package alias, optionally followed by `=folder`. The folder override also becomes the component's `package.json` name.
+`--projects` is only available when creating a new `bun-mono` workspace. Each item is a Bun app or package alias, optionally followed by `=folder`. Without an override, app folders use the alias and package folders use the template package name. A folder override also becomes the component's `package.json` name.
 
 ## Workspace routing
 
@@ -66,8 +68,10 @@ Project names and folder overrides must be safe single path segments.
 | Bun app | `bun-express` | `template-bun-express` |
 | Bun app | `bun-vite-vanilla` | `template-bun-vite-vanilla` |
 | Bun app | `bun-vite-react` | `template-bun-vite-react` |
+| Bun package | `bun-ac-state` | `template-bun-ac-state` |
 | Bun package | `bun-logger` | `template-bun-logger` |
 | Bun package | `bun-package` | `template-bun-package` |
+| Bun package | `bun-event-bus` | `template-bun-event-bus` |
 | Bun workspace | `bun-mono` | `template-bun-mono` |
 | Legacy | `console` | `template-node-console` |
 | Legacy | `package` | `template-node-package` |
@@ -76,7 +80,7 @@ Project names and folder overrides must be safe single path segments.
 | Legacy | `pixi-react` | `template-react-pixi` |
 | Legacy | `pixi-vanilla` | `template-vanilla-pixi` |
 
-The Bun package templates are minimal reusable TypeScript libraries. `bun-package` has no runtime dependencies; `bun-logger` preserves the logger sample formerly included in the workspace shell.
+The Bun package templates are minimal reusable TypeScript libraries. `bun-package` has no runtime dependencies; `bun-logger` preserves the logger sample formerly included in the workspace shell. The `ac-state` and `event-bus` packages are available through the `bun-ac-state` and `bun-event-bus` templates. They remain separate packages; `ac-state` declares `event-bus` as a workspace dependency, but the consumer must create and wire the `event-bus` package separately. Standalone `ac-state` output requires the consumer to resolve or replace its `workspace:*` dependency.
 
 ## Installation
 

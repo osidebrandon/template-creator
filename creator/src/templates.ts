@@ -12,8 +12,10 @@ export const TEMPLATE_MAP: Record<string, TemplateDefinition> = {
   'bun-express': { directory: 'template-bun-express', kind: 'app' },
   'bun-vite-vanilla': { directory: 'template-bun-vite-vanilla', kind: 'app' },
   'bun-vite-react': { directory: 'template-bun-vite-react', kind: 'app' },
+  'bun-ac-state': { directory: 'template-bun-ac-state', kind: 'package' },
   'bun-logger': { directory: 'template-bun-logger', kind: 'package' },
   'bun-package': { directory: 'template-bun-package', kind: 'package' },
+  'bun-event-bus': { directory: 'template-bun-event-bus', kind: 'package' },
   'bun-mono': { directory: 'template-bun-mono', kind: 'workspace' },
   package: { directory: 'template-node-package' },
   express: { directory: 'template-node-express' },
@@ -29,7 +31,7 @@ export type WorkspaceLocation = 'root' | 'apps' | 'packages';
 
 export const getBunTemplateAliases = (kind?: TemplateKind): string[] =>
   Object.entries(TEMPLATE_MAP)
-    .filter(([alias, template]) => alias.startsWith('bun-') && (!kind || template.kind === kind))
+    .filter(([, template]) => template.kind !== undefined && (!kind || template.kind === kind))
     .map(([alias]) => alias);
 
 export const formatWorkspaceTemplateChoices = (location?: WorkspaceLocation): string => {

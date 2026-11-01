@@ -12,11 +12,11 @@ export const createProgram = (): Command => {
   program.name('oside').description('Scaffold a new project from a local template').version('0.0.1');
 
   program
-    .command('create <projectName>')
-    .description('Create a new project from a template')
+    .command('create [projectName]')
+    .description('Create a project from a template; package names default to the template package name')
     .requiredOption('-t, --template <template>', 'template alias to use')
     .option('--projects <projects...>', 'Bun templates to add to a new bun-mono workspace')
-    .action(async (projectName: string, options: { template: string; projects?: string[] }) => {
+    .action(async (projectName: string | undefined, options: { template: string; projects?: string[] }) => {
       try {
         const result = await createProject(projectName, options);
         for (const project of result.created) {

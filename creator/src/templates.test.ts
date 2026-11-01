@@ -19,7 +19,9 @@ describe('TEMPLATE_MAP', () => {
         'bun-package',
         'bun-vite-react',
         'bun-vite-vanilla',
+        'bun-ac-state',
         'console',
+        'bun-event-bus',
         'express',
         'package',
         'pixi-react',
@@ -37,15 +39,21 @@ describe('TEMPLATE_MAP', () => {
       'bun-vite-vanilla',
       'bun-vite-react',
     ]);
-    expect(getBunTemplateAliases('package')).toEqual(['bun-logger', 'bun-package']);
+    expect(getBunTemplateAliases('package')).toEqual([
+      'bun-ac-state',
+      'bun-logger',
+      'bun-package',
+      'bun-event-bus',
+    ]);
     expect(getBunTemplateAliases('workspace')).toEqual(['bun-mono']);
 
     for (const [alias, template] of Object.entries(TEMPLATE_MAP)) {
-      if (alias.startsWith('bun-')) {
-        expect(template.kind).toBeDefined();
+      if (template.kind) {
+        expect(getBunTemplateAliases(template.kind)).toContain(alias);
       } else {
-        expect(template.kind).toBeUndefined();
+        expect(alias.startsWith('bun-')).toBe(false);
       }
+
       expect(template.directory).toMatch(/^template-/);
     }
   });
@@ -72,6 +80,8 @@ describe('TEMPLATE_MAP', () => {
     expect(output).toContain('Legacy:');
     expect(output).toContain('  bun-hono');
     expect(output).toContain('  bun-package');
+    expect(output).toContain('  bun-ac-state');
+    expect(output).toContain('  bun-event-bus');
     expect(output).toContain('  express');
     expect(output).not.toContain('template-bun-hono');
     expect(output).not.toContain('apps/');

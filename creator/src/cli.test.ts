@@ -21,10 +21,12 @@ describe('create command options', () => {
     }
   });
 
-  it('documents the required template and workspace batch option in help', () => {
+  it('documents the optional project name, required template, and workspace batch option in help', () => {
     const command = createCommand();
     const help = command?.helpInformation() ?? '';
 
+    expect(help).toContain('[projectName]');
+    expect(help).not.toContain('<projectName>');
     expect(help).toContain('--template <template>');
     expect(help).toContain('--projects <projects...>');
     expect(help).not.toContain('--dir');

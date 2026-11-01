@@ -18,7 +18,7 @@ const makeTemplates = async (): Promise<void> => {
     const source = path.join(FIXTURE_TEMPLATES, template.directory);
     await fs.ensureDir(source);
     await fs.writeJson(path.join(source, 'package.json'), {
-      name: `template-${alias}`,
+      name: template.kind === 'package' ? alias.replace(/^bun-/, '') : `template-${alias}`,
       version: '1.0.0',
       scripts: alias === 'bun-mono' ? { keep: 'unchanged' } : {},
       ...(alias === 'bun-mono' ? { workspaces: ['apps/*', 'packages/*'] } : {}),
@@ -108,9 +108,16 @@ describe('Bun workspace detection and routing', () => {
 
     const app = await createProject('my-app', createOptions(root, 'bun-hono'));
     const packageProject = await createProject('my-lib', createOptions(root, 'bun-package'));
+    const defaultPackageProject = await createProject(
+      undefined,
+      createOptions(root, 'bun-event-bus')
+    );
 
     expect(app.created[0].destination).toBe(path.join(root, 'apps', 'my-app'));
     expect(packageProject.created[0].destination).toBe(path.join(root, 'packages', 'my-lib'));
+    expect(defaultPackageProject.created[0].destination).toBe(
+      path.join(root, 'packages', 'event-bus')
+    );
     expect(app.installRoot).toBe(root);
     expect(app.installCommand).toBe('bun install');
     await expect(fs.readJson(path.join(root, 'apps', 'my-app', 'package.json'))).resolves.toMatchObject({
@@ -119,6 +126,9 @@ describe('Bun workspace detection and routing', () => {
     await expect(
       fs.readJson(path.join(root, 'packages', 'my-lib', 'package.json'))
     ).resolves.toMatchObject({ name: 'my-lib' });
+    await expect(
+      fs.readJson(path.join(root, 'packages', 'event-bus', 'package.json'))
+    ).resolves.toMatchObject({ name: 'event-bus' });
     await expect(fs.readJson(path.join(root, 'package.json'))).resolves.toEqual({ workspaces: ['apps/*', 'packages/*'] });
   });
 
@@ -187,6 +197,44 @@ describe('project creation', () => {
     ).resolves.toMatchObject({ name: 'my-bun-app', version: '0.0.1' });
   });
 
+  it('defaults package projects to their manifest name and allows renaming', async () => {
+    const cwd = path.join(TEST_ROOT, 'default-package');
+    await fs.ensureDir(cwd);
+
+    const defaultPackage = await createProject(undefined, createOptions(cwd, 'bun-event-bus'));
+    const renamedPackage = await createProject(
+      'custom-event-bus',
+      createOptions(cwd, 'bun-event-bus')
+    );
+
+    expect(defaultPackage.created[0].destination).toBe(path.join(cwd, 'event-bus'));
+    expect(renamedPackage.created[0].destination).toBe(path.join(cwd, 'custom-event-bus'));
+    await expect(
+      fs.readJson(path.join(cwd, 'event-bus', 'package.json'))
+    ).resolves.toMatchObject({ name: 'event-bus' });
+    await expect(
+      fs.readJson(path.join(cwd, 'custom-event-bus', 'package.json'))
+    ).resolves.toMatchObject({ name: 'custom-event-bus' });
+    await expect(createProject(undefined, createOptions(cwd, 'bun-console'))).rejects.toThrow(
+      'Project name is required for template "bun-console".'
+    );
+  });
+
+  it('reports an invalid template package name instead of silently choosing a fallback', async () => {
+    const cwd = path.join(TEST_ROOT, 'invalid-default-package');
+    await fs.ensureDir(cwd);
+    const manifestPath = path.join(
+      FIXTURE_TEMPLATES,
+      TEMPLATE_MAP['bun-event-bus'].directory,
+      'package.json'
+    );
+    await fs.writeJson(manifestPath, { version: '1.0.0' });
+
+    await expect(createProject(undefined, createOptions(cwd, 'bun-event-bus'))).rejects.toThrow(
+      'must have a non-empty package.json name'
+    );
+  });
+
   it('creates every valid bootstrap component and retains partial output after failures', async () => {
     const cwd = path.join(TEST_ROOT, 'bootstrap-parent');
     await fs.ensureDir(cwd);
@@ -196,6 +244,7 @@ describe('project creation', () => {
         'bun-hono=api',
         'console',
         'bun-logger',
+        'bun-event-bus',
         'bun-mono',
         'bun-package=../escape',
       ]),
@@ -205,11 +254,14 @@ describe('project creation', () => {
     expect(result.created.map((project) => project.destination)).toEqual([
       root,
       path.join(root, 'apps', 'api'),
-      path.join(root, 'packages', 'bun-logger'),
+      path.join(root, 'packages', 'logger'),
+      path.join(root, 'packages', 'event-bus'),
     ]);
     expect(result.failures).toHaveLength(3);
     expect(result.validProjectChoices).toContain('apps: bun-console, bun-hono');
-    expect(result.validProjectChoices).toContain('packages: bun-logger, bun-package');
+    expect(result.validProjectChoices).toContain(
+      'packages: bun-ac-state, bun-logger, bun-package, bun-event-bus'
+    );
     expect(result.installRoot).toBe(root);
     expect(result.installCommand).toBe('bun install');
     await expect(fs.readJson(path.join(root, 'package.json'))).resolves.toMatchObject({
@@ -221,8 +273,11 @@ describe('project creation', () => {
       name: 'api',
     });
     await expect(
-      fs.readJson(path.join(root, 'packages', 'bun-logger', 'package.json'))
-    ).resolves.toMatchObject({ name: 'bun-logger' });
+      fs.readJson(path.join(root, 'packages', 'logger', 'package.json'))
+    ).resolves.toMatchObject({ name: 'logger' });
+    await expect(
+      fs.readJson(path.join(root, 'packages', 'event-bus', 'package.json'))
+    ).resolves.toMatchObject({ name: 'event-bus' });
   });
 
   it('continues a workspace batch after a destination collision', async () => {

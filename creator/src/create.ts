@@ -20,6 +20,7 @@ const INVALID_PATH_SEGMENT_CHARACTERS = /[<>:"/\\|?*]/;
 const WINDOWS_RESERVED_PATH_SEGMENT = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 
 interface PackageManifest {
+  name?: unknown;
   workspaces?: unknown;
 }
 
@@ -164,6 +165,43 @@ const assertSafePathSegment = (value: string, label: string): void => {
   }
 };
 
+const getTemplatePackageName = async (
+  alias: string,
+  template: TemplateDefinition,
+  templatesRoot: string
+): Promise<string> => {
+  const source = path.join(templatesRoot, template.directory);
+  if (!(await fs.pathExists(source))) {
+    throw new Error(`Template directory not found: ${source}`);
+  }
+
+  const manifestPath = path.join(source, 'package.json');
+  if (!(await fs.pathExists(manifestPath))) {
+    throw new Error(
+      `Cannot infer a project name for package template "${alias}": package.json not found.`
+    );
+  }
+
+  let parsedManifest: unknown;
+  try {
+    parsedManifest = await fs.readJson(manifestPath);
+  } catch (error) {
+    throw new Error(`Unable to read package manifest "${manifestPath}": ${errorMessage(error)}`);
+  }
+  if (!parsedManifest || typeof parsedManifest !== 'object' || Array.isArray(parsedManifest)) {
+    throw new Error(`Invalid package manifest "${manifestPath}": expected a JSON object.`);
+  }
+
+  const packageName = (parsedManifest as PackageManifest).name;
+  if (typeof packageName !== 'string' || !packageName) {
+    throw new Error(
+      `Package template "${alias}" must have a non-empty package.json name to default its project name.`
+    );
+  }
+  assertSafePathSegment(packageName, 'Default package name');
+  return packageName;
+};
+
 const copyTemplate = async (src: string, dest: string): Promise<void> => {
   await fs.copy(src, dest, {
     filter: (srcPath) => {
@@ -261,7 +299,7 @@ const createWorkspaceRoot = async (
 
   for (const entry of projects) {
     try {
-      const { template: alias, folder } = parseWorkspaceProjectEntry(entry);
+      const { template: alias, folder: folderOverride } = parseWorkspaceProjectEntry(entry);
       const component = getTemplateDefinition(alias);
       if (!component) {
         throw new Error(`Unknown template alias: "${alias}"`);
@@ -272,6 +310,10 @@ const createWorkspaceRoot = async (
         }
         throw new Error(`"${alias}" is not a Bun app or package template.`);
       }
+      const folder =
+        component.kind === 'package' && !entry.includes('=')
+          ? await getTemplatePackageName(alias, component, templatesRoot)
+          : folderOverride;
       assertSafePathSegment(folder, 'Project folder');
 
       const parent = component.kind === 'app' ? 'apps' : 'packages';
@@ -367,19 +409,32 @@ const createInWorkspace = async (
 };
 
 export const createProject = async (
-  projectName: string,
+  projectName: string | undefined,
   options: CreateProjectOptions
 ): Promise<CreateProjectResult> => {
-  assertSafePathSegment(projectName, 'Project name');
+  if (projectName !== undefined) {
+    assertSafePathSegment(projectName, 'Project name');
+  }
 
   const cwd = path.resolve(options.cwd ?? process.cwd());
   const templatesRoot = path.resolve(options.templatesRoot ?? TEMPLATES_ROOT);
   const workspace = await findBunWorkspaceContext(cwd);
   const template = getTemplateDefinition(options.template);
+  if (!template) throw unknownTemplateError(options.template, workspace);
+
+  const resolvedProjectName =
+    projectName ??
+    (template.kind === 'package'
+      ? await getTemplatePackageName(options.template, template, templatesRoot)
+      : undefined);
+  if (resolvedProjectName === undefined) {
+    throw new Error(`Project name is required for template "${options.template}".`);
+  }
+  assertSafePathSegment(resolvedProjectName, 'Project name');
 
   if (workspace) {
     return createInWorkspace(
-      projectName,
+      resolvedProjectName,
       options.template,
       template,
       options.projects,
@@ -389,14 +444,12 @@ export const createProject = async (
     );
   }
 
-  if (!template) throw unknownTemplateError(options.template);
-
   if (template.kind === 'workspace') {
     if (options.template !== 'bun-mono') {
       throw new Error(`"${options.template}" is not a supported workspace root template.`);
     }
     return createWorkspaceRoot(
-      projectName,
+      resolvedProjectName,
       template,
       options.projects ?? [],
       cwd,
@@ -413,11 +466,11 @@ export const createProject = async (
     );
   }
 
-  const destination = path.join(cwd, projectName);
+  const destination = path.join(cwd, resolvedProjectName);
   const created = await createAtPath(
     options.template,
     template,
-    projectName,
+    resolvedProjectName,
     destination,
     templatesRoot
   );
